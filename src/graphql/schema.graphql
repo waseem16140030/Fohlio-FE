@@ -1,0 +1,43 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  status: String
+  role: String
+  registrationDate: String
+}
+
+input PaginationInput {
+  page: Int
+  pageSize: Int
+}
+
+input UserFilters {
+  email: String
+  role: String
+  status: String
+}
+
+input SortInput {
+  field: String
+  order: String
+}
+
+type Metadata {
+  total: Int!
+  page: Int!
+  pageSize: Int!
+}
+
+type UsersResponse {
+  data: [User!]!
+  metadata: Metadata!
+}
+
+type Query {
+  users(
+    pagination: PaginationInput
+    filters: UserFilters
+    sort: SortInput
+  ): UsersResponse!
+}

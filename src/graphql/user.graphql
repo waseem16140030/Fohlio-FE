@@ -1,0 +1,21 @@
+query GetUsers(
+  $pagination: PaginationInput
+  $filters: UserFilters
+  $sort: SortInput
+) {
+  users(pagination: $pagination, filters: $filters, sort: $sort) {
+    data {
+      id
+      name
+      email
+      role
+      status
+      registrationDate
+    }
+    metadata {
+      total
+      page
+      pageSize
+    }
+  }
+}

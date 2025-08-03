@@ -1,0 +1,203 @@
+import {
+  useQuery,
+  useInfiniteQuery,
+  UseQueryOptions,
+  UseInfiniteQueryOptions,
+  InfiniteData,
+} from "@tanstack/react-query";
+import { fetchData } from "@/app/shared/lib/fetcher";
+export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
+export type Exact<T extends { [key: string]: unknown }> = {
+  [K in keyof T]: T[K];
+};
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>;
+};
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>;
+};
+export type MakeEmpty<
+  T extends { [key: string]: unknown },
+  K extends keyof T,
+> = { [_ in K]?: never };
+export type Incremental<T> =
+  | T
+  | {
+      [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never;
+    };
+/** All built-in and custom scalars, mapped to their actual values */
+export type Scalars = {
+  ID: { input: string; output: string };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
+};
+
+export type Metadata = {
+  __typename?: "Metadata";
+  page: Scalars["Int"]["output"];
+  pageSize: Scalars["Int"]["output"];
+  total: Scalars["Int"]["output"];
+};
+
+export type PaginationInput = {
+  page?: InputMaybe<Scalars["Int"]["input"]>;
+  pageSize?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type Query = {
+  __typename?: "Query";
+  users: UsersResponse;
+};
+
+export type QueryUsersArgs = {
+  filters?: InputMaybe<UserFilters>;
+  pagination?: InputMaybe<PaginationInput>;
+  sort?: InputMaybe<SortInput>;
+};
+
+export type SortInput = {
+  field?: InputMaybe<Scalars["String"]["input"]>;
+  order?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type User = {
+  __typename?: "User";
+  email: Scalars["String"]["output"];
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
+  registrationDate?: Maybe<Scalars["String"]["output"]>;
+  role?: Maybe<Scalars["String"]["output"]>;
+  status?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type UserFilters = {
+  email?: InputMaybe<Scalars["String"]["input"]>;
+  role?: InputMaybe<Scalars["String"]["input"]>;
+  status?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type UsersResponse = {
+  __typename?: "UsersResponse";
+  data: Array<User>;
+  metadata: Metadata;
+};
+
+export type GetUsersQueryVariables = Exact<{
+  pagination?: InputMaybe<PaginationInput>;
+  filters?: InputMaybe<UserFilters>;
+  sort?: InputMaybe<SortInput>;
+}>;
+
+export type GetUsersQuery = {
+  __typename?: "Query";
+  users: {
+    __typename?: "UsersResponse";
+    data: Array<{
+      __typename?: "User";
+      id: string;
+      name: string;
+      email: string;
+      role?: string | null;
+      status?: string | null;
+      registrationDate?: string | null;
+    }>;
+    metadata: {
+      __typename?: "Metadata";
+      total: number;
+      page: number;
+      pageSize: number;
+    };
+  };
+};
+
+export const GetUsersDocument = `
+    query GetUsers($pagination: PaginationInput, $filters: UserFilters, $sort: SortInput) {
+  users(pagination: $pagination, filters: $filters, sort: $sort) {
+    data {
+      id
+      name
+      email
+      role
+      status
+      registrationDate
+    }
+    metadata {
+      total
+      page
+      pageSize
+    }
+  }
+}
+    `;
+
+export const useGetUsersQuery = <TData = GetUsersQuery, TError = unknown>(
+  variables?: GetUsersQueryVariables,
+  options?: Omit<UseQueryOptions<GetUsersQuery, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<GetUsersQuery, TError, TData>["queryKey"];
+  },
+) => {
+  return useQuery<GetUsersQuery, TError, TData>({
+    queryKey: variables === undefined ? ["GetUsers"] : ["GetUsers", variables],
+    queryFn: fetchData<GetUsersQuery, GetUsersQueryVariables>(
+      GetUsersDocument,
+      variables,
+    ),
+    ...options,
+  });
+};
+
+useGetUsersQuery.getKey = (variables?: GetUsersQueryVariables) =>
+  variables === undefined ? ["GetUsers"] : ["GetUsers", variables];
+
+export const useInfiniteGetUsersQuery = <
+  TData = InfiniteData<GetUsersQuery>,
+  TError = unknown,
+>(
+  variables: GetUsersQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<GetUsersQuery, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      GetUsersQuery,
+      TError,
+      TData
+    >["queryKey"];
+  },
+) => {
+  return useInfiniteQuery<GetUsersQuery, TError, TData>(
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["GetUsers.infinite"]
+            : ["GetUsers.infinite", variables],
+        queryFn: (metaData) =>
+          fetchData<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
+  );
+};
+
+useInfiniteGetUsersQuery.getKey = (variables?: GetUsersQueryVariables) =>
+  variables === undefined
+    ? ["GetUsers.infinite"]
+    : ["GetUsers.infinite", variables];
+
+useGetUsersQuery.fetcher = (
+  variables?: GetUsersQueryVariables,
+  options?: RequestInit["headers"],
+) =>
+  fetchData<GetUsersQuery, GetUsersQueryVariables>(
+    GetUsersDocument,
+    variables,
+    options,
+  );
