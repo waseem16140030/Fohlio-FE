@@ -43,3 +43,15 @@ type Query {
     sort: SortInput
   ): UsersResponse!
 }
+
+
+type Mutation {
+  createUser(
+    name: String!
+    email: String!
+    phone: String!
+    country: String!
+    role: String!
+    status: String!
+  ): User!
+}

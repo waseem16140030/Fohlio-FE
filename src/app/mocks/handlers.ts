@@ -1,15 +1,23 @@
 import { graphql, HttpResponse, delay } from "msw";
-import { mockUsers } from "./db";
 import {
+  CreateUserMutation,
+  CreateUserMutationVariables,
   GetUsersQuery,
   GetUsersQueryVariables,
+  User,
 } from "@/graphql/generated/graphql";
+import { nanoid } from "nanoid";
+import { useUserStore } from "app/entities/stores";
 
 export const handlers = [
   graphql.query<GetUsersQuery, GetUsersQueryVariables>(
     "GetUsers",
     async ({ variables }) => {
       try {
+        const { getUsers } = useUserStore.getState();
+        const allUsers = getUsers();
+        // console.log(allUsers, 'allUsers')
+        console.log(allUsers)
         await delay(300);
 
         const {
@@ -18,38 +26,37 @@ export const handlers = [
           sort = { field: "registrationDate", order: "DESC" },
         } = variables ?? {};
 
-        const page = pagination?.page ?? 1;
-        const pageSize = pagination?.pageSize ?? 10;
-        const { email, role, status } = filters ?? {};
-
-        const field = sort?.field ?? "registrationDate";
-        const order = sort?.order ?? "DESC";
-
-        const filteredUsers = [...mockUsers].filter((user) => {
-          return (
-            (!email ||
-              user.email.toLowerCase().includes(email.toLowerCase())) &&
-            (!role || user.role === role) &&
-            (!status || user.status === status)
-          );
+        // Filtering
+        const filteredUsers = allUsers.filter((user) => {
+          const matchesEmail =
+            !filters?.email ||
+            user.email.toLowerCase().includes(filters.email.toLowerCase());
+          const matchesRole = !filters?.role || user.role === filters.role;
+          const matchesStatus =
+            !filters?.status || user.status === filters.status;
+          return matchesEmail && matchesRole && matchesStatus;
         });
 
+        // Sorting - newest first by default
         filteredUsers.sort((a, b) => {
-          const sortField = field as keyof typeof a;
-          const aValue = a[sortField]!;
-          const bValue = b[sortField]!;
+          const field = sort?.field as keyof User;
+          const aVal = a[field] as string;
+          const bVal = b[field] as string;
 
-          if (sortField === "registrationDate") {
-            return order === "ASC"
-              ? new Date(aValue).getTime() - new Date(bValue).getTime()
-              : new Date(bValue).getTime() - new Date(aValue).getTime();
+          if (field === "registrationDate") {
+            return sort?.order === "ASC"
+              ? new Date(aVal).getTime() - new Date(bVal).getTime()
+              : new Date(bVal).getTime() - new Date(aVal).getTime();
           }
 
-          return order === "ASC"
-            ? String(aValue).localeCompare(String(bValue))
-            : String(bValue).localeCompare(String(aValue));
+          return sort?.order === "ASC"
+            ? String(aVal).localeCompare(String(bVal))
+            : String(bVal).localeCompare(String(aVal));
         });
 
+        // Pagination
+        const page = pagination?.page || 1;
+        const pageSize = pagination?.pageSize || 10;
         const startIdx = (page - 1) * pageSize;
         const paginatedUsers = filteredUsers.slice(
           startIdx,
@@ -69,10 +76,65 @@ export const handlers = [
           },
         });
       } catch (error) {
-        console.error("Mock API Error:", error);
+        console.error("Error fetching users:", error);
         return HttpResponse.json(
-          { errors: [{ message: "Internal server error" }] },
+          { errors: [{ message: "Failed to fetch users" }] },
           { status: 500 }
+        );
+      }
+    }
+  ),
+
+  graphql.mutation<CreateUserMutation, CreateUserMutationVariables>(
+    "CreateUser",
+    async ({ variables }) => {
+      try {
+        await delay(500); // Simulate network delay
+
+        if (!variables) {
+          throw new Error("No variables provided");
+        }
+
+        const { name, email, phone, country, role, status } = variables;
+
+        // Validate required fields
+        if (!name || !email || !phone || !country || !role || !status) {
+          throw new Error("All fields are required");
+        }
+
+        // Create new user with current timestamp
+        const newUser: User = {
+          id: nanoid(),
+          name,
+          email,
+          phone,
+          country,
+          role: role as User["role"],
+          status: status as User["status"],
+          registrationDate: new Date().toISOString(), // Current date for top position
+        };
+
+        const { addUser } = useUserStore.getState();
+        addUser(newUser);
+        return HttpResponse.json({
+          data: {
+            createUser: newUser,
+          },
+        });
+      } catch (error) {
+        console.error("Create User Error:", error);
+        return HttpResponse.json(
+          {
+            errors: [
+              {
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to create user",
+              },
+            ],
+          },
+          { status: 400 }
         );
       }
     }
