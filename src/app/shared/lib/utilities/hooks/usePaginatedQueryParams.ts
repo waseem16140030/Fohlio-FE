@@ -128,7 +128,7 @@ export function usePaginatedQueryParams({
 
   const handleSearch: ChangeEventHandler<HTMLInputElement> = useCallback(
     (e) => {
-      updateQuery({ search: e.target.value.trim() || null, current: 1 });
+      updateQuery({ search: e.target.value.trim() ?? null, current: 1 });
     },
     [updateQuery]
   );

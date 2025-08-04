@@ -3,7 +3,7 @@ import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ClientProvider, ThemeProvider } from "@/app/providers";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { DashboardLayout, initMocks } from "@/app/shared";
+import { DashboardLayout } from "@/app/shared";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -19,9 +19,7 @@ export const metadata: Metadata = {
   description: "Brand Specification and Procurement Software",
 };
 
-if (process.env.NODE_ENV === "development") {
-  await initMocks();
-}
+
 
 export default async function RootLayout({
   children,

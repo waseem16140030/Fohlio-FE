@@ -2,13 +2,14 @@
 
 import {
   formatDate,
+  MyModalRef,
   SearchInput,
   userRoleColorMap,
   userRoleIconMap,
   userStatusColorMap,
 } from "@/app/shared";
 import { useGetUsersQuery, User } from "@/graphql/generated/graphql";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Avatar,
   Button,
@@ -23,14 +24,17 @@ import {
   Typography,
 } from "antd";
 import { capitalize } from "lodash";
-import { EditTwoTone, EyeTwoTone, UserAddOutlined } from "@ant-design/icons";
-import React from "react";
+import { DeleteTwoTone, EditTwoTone, EyeTwoTone, UserAddOutlined } from "@ant-design/icons";
+import React, { useRef } from "react";
 import {
   usePaginatedQueryParams,
-  useRoles,
+  useUserOptions,
 } from "@/app/shared/lib/utilities/hooks";
+import { AddUser } from "./add-user";
 
 export function UsersList() {
+  const modalRef = useRef<MyModalRef>(null);
+
   const {
     handleSearch,
     onTableChange,
@@ -39,9 +43,11 @@ export function UsersList() {
     current,
     pageSize,
     selectedFilters,
+    sortField,
+    sortOrder,
   } = usePaginatedQueryParams({ filterKeys: ["role"] });
 
-  const roles = useRoles();
+  const { roles } = useUserOptions();
 
   const paginationParams = {
     page: current,
@@ -52,21 +58,28 @@ export function UsersList() {
     email: search,
     role: selectedFilters?.role,
   };
+
+  const sortParams = {
+    order: sortOrder,
+    field: sortField,
+  };
+
   const queryKey = useGetUsersQuery.getKey({
     pagination: paginationParams,
     filters: filterParams,
+    sort: sortParams,
   });
   const queryFn = useGetUsersQuery.fetcher({
     pagination: paginationParams,
     filters: filterParams,
+    sort: sortParams,
   });
-  const { data: userData, isLoading } = useSuspenseQuery({
+  const { data: userData, isLoading } = useQuery({
     queryKey,
     queryFn,
   });
-  const {
-    users: { data, metadata },
-  } = userData ?? {};
+  const { users } = userData ?? {};
+  const { data, metadata } = users ?? {};
 
   const { Text } = Typography;
   const { token } = theme.useToken();
@@ -76,6 +89,7 @@ export function UsersList() {
       key: "name",
       dataIndex: "name",
       title: "Name",
+      sorter: true,
       render: (_, { name }, index) => (
         <Space size={4}>
           <Avatar
@@ -104,6 +118,7 @@ export function UsersList() {
       key: "registrationDate",
       dataIndex: "registrationDate",
       title: "Registration Date",
+      sorter: true,
       render: (_, { registrationDate }) => (
         <Tooltip title={registrationDate}>
           {formatDate(registrationDate ?? "")}
@@ -115,26 +130,29 @@ export function UsersList() {
       dataIndex: "role",
       title: "Role",
       align: "center",
-      render: (_, { role }) => (
-        <Tag
-          className="tw:!m-0"
-          color={userRoleColorMap[role ?? ""]}
-          icon={React.createElement(userRoleIconMap[role ?? ""])}
-        >
-          {capitalize(role ?? "")}
-        </Tag>
-      ),
+      render: (_, { role }) => {
+        const color = userRoleColorMap[role!] ?? "default";
+        const icon = React.createElement(userRoleIconMap[role ?? ""]);
+        return (
+          <Tag className="tw:!m-0" color={color} icon={icon}>
+            {capitalize(role ?? "")}
+          </Tag>
+        );
+      },
     },
     {
       key: "status",
       dataIndex: "status",
       title: "Status",
       align: "center",
-      render: (_, { status }) => (
-        <Tag className="tw:!m-0" color={userStatusColorMap[status ?? ""]}>
-          {capitalize(status ?? "")}
-        </Tag>
-      ),
+      render: (_, { status }) => {
+        const color = userStatusColorMap[status!] ?? "default";
+        return (
+          <Tag className="tw:!m-0" color={color}>
+            {capitalize(status ?? "")}
+          </Tag>
+        );
+      },
     },
     {
       key: "id",
@@ -145,7 +163,7 @@ export function UsersList() {
       render: () => (
         <Space size={0}>
           <Button type="text">
-            <EyeTwoTone twoToneColor={token.colorSuccess} />
+            <DeleteTwoTone twoToneColor={token.colorError} />
           </Button>
           <Button type="text">
             <EditTwoTone twoToneColor={token.colorInfo} />
@@ -155,45 +173,56 @@ export function UsersList() {
     },
   ];
 
+  const handleAddClick = () => {
+    modalRef.current?.open();
+  };
+
   return (
-    <Card size="small" variant="borderless" className="tw:h-full">
-      <div className="tw:flex tw:flex-col tw:gap-y-4 tw:lg:gap-y-5 tw:md:p-3">
-        <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[1fr_auto] tw:lg:grid-cols-[0.7fr_auto] tw:gap-4 tw:items-center">
-          <div className="tw:order-2 tw:sm:order-1 tw:flex tw:items-center tw:gap-x-2">
-            <SearchInput
-              defaultValue={search}
-              placeholder="Search users by email..."
-              onChange={handleSearch}
-            />
-            <Select
-              options={roles}
-              defaultValue={selectedFilters?.role}
-              onChange={(value) => handleSelectChange("role", value)}
-              allowClear
-              className="tw:sm:w-60"
-              placeholder="Select role"
-            />
+    <>
+      <Card size="small" variant="borderless" className="tw:h-full">
+        <div className="tw:flex tw:flex-col tw:gap-y-4 tw:lg:gap-y-5 tw:md:p-3">
+          <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[1fr_auto] tw:lg:grid-cols-[0.7fr_auto] tw:gap-4 tw:items-center">
+            <div className="tw:order-2 tw:sm:order-1 tw:flex tw:items-center tw:gap-x-2">
+              <SearchInput
+                defaultValue={search}
+                placeholder="Search users by email..."
+                onChange={handleSearch}
+              />
+              <Select
+                options={roles}
+                defaultValue={selectedFilters?.role}
+                onChange={(value) => handleSelectChange("role", value)}
+                allowClear
+                className="tw:sm:w-60"
+                placeholder="Select role"
+              />
+            </div>
+            <div className="tw:order-1 tw:justify-self-end tw:sm:order-2">
+              <Button
+                type="primary"
+                icon={<UserAddOutlined />}
+                onClick={handleAddClick}
+              >
+                Add User
+              </Button>
+            </div>
           </div>
-          <div className="tw:order-1 tw:justify-self-end tw:sm:order-2">
-            <Button type="primary" icon={<UserAddOutlined />}>
-              Add User
-            </Button>
-          </div>
+          <Table<User>
+            onChange={onTableChange}
+            loading={isLoading}
+            columns={userColumns}
+            dataSource={data}
+            rowKey="id"
+            pagination={{
+              total: metadata?.total,
+              pageSize,
+              current,
+            }}
+            scroll={{ x: "max-content" }}
+          />
         </div>
-        <Table<User>
-          onChange={onTableChange}
-          loading={isLoading}
-          columns={userColumns}
-          dataSource={data}
-          rowKey="id"
-          pagination={{
-            total: metadata.total,
-            pageSize,
-            current,
-          }}
-          scroll={{ x: "max-content" }}
-        />
-      </div>
-    </Card>
+      </Card>
+      <AddUser modalRef={modalRef} />
+    </>
   );
 }

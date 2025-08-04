@@ -21,3 +21,31 @@ query GetUsers(
     }
   }
 }
+
+
+mutation CreateUser(
+  $name: String!
+  $email: String!
+  $phone: String!
+  $country: String!
+  $role: String!
+  $status: String!
+) {
+  createUser(
+    name: $name
+    email: $email
+    phone: $phone
+    country: $country
+    role: $role
+    status: $status
+  ) {
+    id
+    name
+    email
+    role
+    status
+    phone
+    country
+    registrationDate
+  }
+}

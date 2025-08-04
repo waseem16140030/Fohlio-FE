@@ -1,9 +1,11 @@
 import {
   useQuery,
   useInfiniteQuery,
+  useMutation,
   UseQueryOptions,
   UseInfiniteQueryOptions,
   InfiniteData,
+  UseMutationOptions,
 } from "@tanstack/react-query";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -64,6 +66,20 @@ export type Metadata = {
   page: Scalars["Int"]["output"];
   pageSize: Scalars["Int"]["output"];
   total: Scalars["Int"]["output"];
+};
+
+export type Mutation = {
+  __typename?: "Mutation";
+  createUser: User;
+};
+
+export type MutationCreateUserArgs = {
+  country: Scalars["String"]["input"];
+  email: Scalars["String"]["input"];
+  name: Scalars["String"]["input"];
+  phone: Scalars["String"]["input"];
+  role: Scalars["String"]["input"];
+  status: Scalars["String"]["input"];
 };
 
 export type PaginationInput = {
@@ -138,6 +154,30 @@ export type GetUsersQuery = {
       page: number;
       pageSize: number;
     };
+  };
+};
+
+export type CreateUserMutationVariables = Exact<{
+  name: Scalars["String"]["input"];
+  email: Scalars["String"]["input"];
+  phone: Scalars["String"]["input"];
+  country: Scalars["String"]["input"];
+  role: Scalars["String"]["input"];
+  status: Scalars["String"]["input"];
+}>;
+
+export type CreateUserMutation = {
+  __typename?: "Mutation";
+  createUser: {
+    __typename?: "User";
+    id: string;
+    name: string;
+    email: string;
+    role?: string | null;
+    status?: string | null;
+    phone?: string | null;
+    country?: string | null;
+    registrationDate?: string | null;
   };
 };
 
@@ -224,3 +264,55 @@ useInfiniteGetUsersQuery.getKey = (variables?: GetUsersQueryVariables) =>
 
 useGetUsersQuery.fetcher = (variables?: GetUsersQueryVariables) =>
   fetcher<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, variables);
+
+export const CreateUserDocument = `
+    mutation CreateUser($name: String!, $email: String!, $phone: String!, $country: String!, $role: String!, $status: String!) {
+  createUser(
+    name: $name
+    email: $email
+    phone: $phone
+    country: $country
+    role: $role
+    status: $status
+  ) {
+    id
+    name
+    email
+    role
+    status
+    phone
+    country
+    registrationDate
+  }
+}
+    `;
+
+export const useCreateUserMutation = <TError = unknown, TContext = unknown>(
+  options?: UseMutationOptions<
+    CreateUserMutation,
+    TError,
+    CreateUserMutationVariables,
+    TContext
+  >,
+) => {
+  return useMutation<
+    CreateUserMutation,
+    TError,
+    CreateUserMutationVariables,
+    TContext
+  >({
+    mutationKey: ["CreateUser"],
+    mutationFn: (variables?: CreateUserMutationVariables) =>
+      fetcher<CreateUserMutation, CreateUserMutationVariables>(
+        CreateUserDocument,
+        variables,
+      )(),
+    ...options,
+  });
+};
+
+useCreateUserMutation.fetcher = (variables: CreateUserMutationVariables) =>
+  fetcher<CreateUserMutation, CreateUserMutationVariables>(
+    CreateUserDocument,
+    variables,
+  );
