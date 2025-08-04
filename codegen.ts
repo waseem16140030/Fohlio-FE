@@ -1,4 +1,5 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
+
 const config: CodegenConfig = {
   schema: "src/graphql/schema.graphql",
   documents: ["src/**/*.graphql"],
@@ -11,8 +12,13 @@ const config: CodegenConfig = {
       ],
       config: {
         fetcher: {
-          func: "@/app/shared/lib/fetcher#fetchData",
-          isReactHook: false,
+          endpoint: "http://localhost:3000/",
+          fetchParams: {
+            headers: {
+              "Content-Type": "application/json",
+              "x-my-header": "SomeValue",
+            },
+          },
         },
         exposeQueryKeys: true,
         exposeFetcher: true,

@@ -11,6 +11,8 @@ query GetUsers(
       role
       status
       registrationDate
+      phone
+      country
     }
     metadata {
       total

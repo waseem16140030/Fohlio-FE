@@ -1,19 +1,42 @@
 import { useGetUsersQuery } from "@/graphql/generated/graphql";
-import { Users } from "./features";
+import { UsersList, UsersHeading } from "./features";
 import { dehydrate, QueryClient } from "@tanstack/react-query";
-import {Hydrate} from "@/app/providers";
+import { Hydrate } from "@/app/providers";
+import { Suspense } from "react";
+import { Skeleton } from "antd";
 
-export default async function Home() {
-  
-const queryClient=new QueryClient()
-  const variables = {
-    pagination: { page: 1, pageSize: 100 },
-    filters: undefined,
-    sort: undefined,
+interface UserManagementProps {
+  searchParams: Promise<{
+    current?: string;
+    pageSize?: string;
+    search?: string;
+    role?: string;
+  }>;
+}
+
+export default async function UserManagement({
+  searchParams,
+}: UserManagementProps) {
+  const params = await searchParams;
+  const current = Number(params?.current ?? 1);
+  const pageSize = Number(params?.pageSize ?? 10);
+  const searchValue = params?.search;
+  const roleFilter = params.role;
+
+  const pagination = {
+    page: current,
+    pageSize,
   };
 
-  const queryKey = useGetUsersQuery.getKey(variables);
-  const queryFn = useGetUsersQuery.fetcher(variables);
+  const filters = {
+    email: searchValue,
+    role: roleFilter,
+  };
+
+  const queryClient = new QueryClient();
+
+  const queryKey = useGetUsersQuery.getKey({ pagination, filters });
+  const queryFn = useGetUsersQuery.fetcher({ pagination, filters });
 
   await queryClient.prefetchQuery({
     queryKey,
@@ -23,10 +46,22 @@ const queryClient=new QueryClient()
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <div>
-      <Hydrate state={dehydratedState} >
-      <Users variables={variables}  />
+    <Suspense
+      fallback={
+        <Skeleton
+          active
+          paragraph={{
+            rows: 10,
+          }}
+        />
+      }
+    >
+      <Hydrate state={dehydratedState}>
+        <div className="tw:flex tw:flex-col tw:gap-y-4 tw:md:gap-y-6 tw:h-full">
+          <UsersHeading />
+          <UsersList />
+        </div>
       </Hydrate>
-    </div>
+    </Suspense>
   );
 }

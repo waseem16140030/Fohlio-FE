@@ -5,6 +5,8 @@ type User {
   status: String
   role: String
   registrationDate: String
+  phone:String
+  country: String
 }
 
 input PaginationInput {

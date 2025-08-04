@@ -5,7 +5,6 @@ import {
   UseInfiniteQueryOptions,
   InfiniteData,
 } from "@tanstack/react-query";
-import { fetchData } from "@/app/shared/lib/fetcher";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -26,6 +25,31 @@ export type Incremental<T> =
   | {
       [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never;
     };
+
+function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
+  return async (): Promise<TData> => {
+    const res = await fetch("http://localhost:3000/", {
+      method: "POST",
+      ...{
+        headers: {
+          "Content-Type": "application/json",
+          "x-my-header": "SomeValue",
+        },
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const json = await res.json();
+
+    if (json.errors) {
+      const { message } = json.errors[0];
+
+      throw new Error(message);
+    }
+
+    return json.data;
+  };
+}
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string };
@@ -65,9 +89,11 @@ export type SortInput = {
 
 export type User = {
   __typename?: "User";
+  country?: Maybe<Scalars["String"]["output"]>;
   email: Scalars["String"]["output"];
   id: Scalars["ID"]["output"];
   name: Scalars["String"]["output"];
+  phone?: Maybe<Scalars["String"]["output"]>;
   registrationDate?: Maybe<Scalars["String"]["output"]>;
   role?: Maybe<Scalars["String"]["output"]>;
   status?: Maybe<Scalars["String"]["output"]>;
@@ -103,6 +129,8 @@ export type GetUsersQuery = {
       role?: string | null;
       status?: string | null;
       registrationDate?: string | null;
+      phone?: string | null;
+      country?: string | null;
     }>;
     metadata: {
       __typename?: "Metadata";
@@ -123,6 +151,8 @@ export const GetUsersDocument = `
       role
       status
       registrationDate
+      phone
+      country
     }
     metadata {
       total
@@ -141,7 +171,7 @@ export const useGetUsersQuery = <TData = GetUsersQuery, TError = unknown>(
 ) => {
   return useQuery<GetUsersQuery, TError, TData>({
     queryKey: variables === undefined ? ["GetUsers"] : ["GetUsers", variables],
-    queryFn: fetchData<GetUsersQuery, GetUsersQueryVariables>(
+    queryFn: fetcher<GetUsersQuery, GetUsersQueryVariables>(
       GetUsersDocument,
       variables,
     ),
@@ -177,7 +207,7 @@ export const useInfiniteGetUsersQuery = <
             ? ["GetUsers.infinite"]
             : ["GetUsers.infinite", variables],
         queryFn: (metaData) =>
-          fetchData<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, {
+          fetcher<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, {
             ...variables,
             ...(metaData.pageParam ?? {}),
           })(),
@@ -192,12 +222,5 @@ useInfiniteGetUsersQuery.getKey = (variables?: GetUsersQueryVariables) =>
     ? ["GetUsers.infinite"]
     : ["GetUsers.infinite", variables];
 
-useGetUsersQuery.fetcher = (
-  variables?: GetUsersQueryVariables,
-  options?: RequestInit["headers"],
-) =>
-  fetchData<GetUsersQuery, GetUsersQueryVariables>(
-    GetUsersDocument,
-    variables,
-    options,
-  );
+useGetUsersQuery.fetcher = (variables?: GetUsersQueryVariables) =>
+  fetcher<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, variables);
