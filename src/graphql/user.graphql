@@ -59,3 +59,16 @@ mutation EditUserRole($id: ID!, $role: String!) {
     role
   }
 }
+
+mutation EditUser($id: ID!, $input: EditUserInput!) {
+  editUser(id: $id, input: $input) {
+    id
+    name
+    email
+    phone
+    country
+    role
+    status
+    registrationDate
+  }
+}

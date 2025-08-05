@@ -16,9 +16,7 @@ export const handlers = [
       try {
         const { getUsers } = useUserStore.getState();
         const allUsers = getUsers();
-        // console.log(allUsers, 'allUsers')
-        console.log(allUsers);
-        await delay(300);
+        await delay(500);
 
         const {
           pagination = { page: 1, pageSize: 10 },
@@ -156,7 +154,7 @@ export const handlers = [
     }
     try {
       const { removeUserById } = useUserStore.getState();
-      await delay(300);
+      await delay(500);
       removeUserById(id);
 
       return HttpResponse.json({
@@ -221,4 +219,62 @@ export const handlers = [
       );
     }
   }),
+
+  graphql.mutation("EditUser", async ({ variables }) => {
+  const { id, input } = variables;
+
+  if (!id || !input) {
+    return HttpResponse.json(
+      {
+        errors: [{ message: "ID and input are required." }],
+      },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const { getUsers, updateUserById } = useUserStore.getState();
+    await delay(500);
+
+    const existingUsers = getUsers();
+    const user = existingUsers.find((u) => u.id === id);
+    if (!user) {
+      return HttpResponse.json(
+        {
+          errors: [{ message: "User not found." }],
+        },
+        { status: 404 }
+      );
+    }
+
+    const updatedUser = {
+      ...user,
+      ...input,
+    };
+
+    // You need to implement this function ↓
+    updateUserById(id, updatedUser);
+
+    return HttpResponse.json({
+      data: {
+        editUser: updatedUser,
+      },
+    });
+  } catch (error) {
+    return HttpResponse.json(
+      {
+        errors: [
+          {
+            message:
+              error instanceof Error
+                ? error.message
+                : "Failed to edit user",
+          },
+        ],
+      },
+      { status: 400 }
+    );
+  }
+}),
+
 ];

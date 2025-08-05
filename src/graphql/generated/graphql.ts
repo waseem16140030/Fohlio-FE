@@ -61,6 +61,15 @@ export type Scalars = {
   Float: { input: number; output: number };
 };
 
+export type EditUserInput = {
+  country?: InputMaybe<Scalars["String"]["input"]>;
+  email?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  phone?: InputMaybe<Scalars["String"]["input"]>;
+  role?: InputMaybe<Scalars["String"]["input"]>;
+  status?: InputMaybe<Scalars["String"]["input"]>;
+};
+
 export type Metadata = {
   __typename?: "Metadata";
   page: Scalars["Int"]["output"];
@@ -72,6 +81,7 @@ export type Mutation = {
   __typename?: "Mutation";
   createUser: User;
   deleteUser: Scalars["Boolean"]["output"];
+  editUser: User;
   editUserRole: User;
 };
 
@@ -86,6 +96,11 @@ export type MutationCreateUserArgs = {
 
 export type MutationDeleteUserArgs = {
   id: Scalars["ID"]["input"];
+};
+
+export type MutationEditUserArgs = {
+  id: Scalars["ID"]["input"];
+  input: EditUserInput;
 };
 
 export type MutationEditUserRoleArgs = {
@@ -209,6 +224,26 @@ export type EditUserRoleMutationVariables = Exact<{
 export type EditUserRoleMutation = {
   __typename?: "Mutation";
   editUserRole: { __typename?: "User"; id: string; role?: string | null };
+};
+
+export type EditUserMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+  input: EditUserInput;
+}>;
+
+export type EditUserMutation = {
+  __typename?: "Mutation";
+  editUser: {
+    __typename?: "User";
+    id: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+    country?: string | null;
+    role?: string | null;
+    status?: string | null;
+    registrationDate?: string | null;
+  };
 };
 
 export const GetUsersDocument = `
@@ -419,5 +454,50 @@ export const useEditUserRoleMutation = <TError = unknown, TContext = unknown>(
 useEditUserRoleMutation.fetcher = (variables: EditUserRoleMutationVariables) =>
   fetcher<EditUserRoleMutation, EditUserRoleMutationVariables>(
     EditUserRoleDocument,
+    variables,
+  );
+
+export const EditUserDocument = `
+    mutation EditUser($id: ID!, $input: EditUserInput!) {
+  editUser(id: $id, input: $input) {
+    id
+    name
+    email
+    phone
+    country
+    role
+    status
+    registrationDate
+  }
+}
+    `;
+
+export const useEditUserMutation = <TError = unknown, TContext = unknown>(
+  options?: UseMutationOptions<
+    EditUserMutation,
+    TError,
+    EditUserMutationVariables,
+    TContext
+  >,
+) => {
+  return useMutation<
+    EditUserMutation,
+    TError,
+    EditUserMutationVariables,
+    TContext
+  >({
+    mutationKey: ["EditUser"],
+    mutationFn: (variables?: EditUserMutationVariables) =>
+      fetcher<EditUserMutation, EditUserMutationVariables>(
+        EditUserDocument,
+        variables,
+      )(),
+    ...options,
+  });
+};
+
+useEditUserMutation.fetcher = (variables: EditUserMutationVariables) =>
+  fetcher<EditUserMutation, EditUserMutationVariables>(
+    EditUserDocument,
     variables,
   );

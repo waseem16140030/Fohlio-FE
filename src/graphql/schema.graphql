@@ -44,6 +44,15 @@ type Query {
   ): UsersResponse!
 }
 
+input EditUserInput {
+  name: String
+  email: String
+  phone: String
+  country: String
+  role: String
+  status: String
+}
+
 type Mutation {
   createUser(
     name: String!
@@ -55,4 +64,5 @@ type Mutation {
   ): User!
   deleteUser(id: ID!): Boolean!
   editUserRole(id: ID!, role: String!): User!
+  editUser(id: ID!, input: EditUserInput!): User!
 }
