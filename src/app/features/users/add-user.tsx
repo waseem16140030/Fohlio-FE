@@ -3,6 +3,7 @@ import {
   FOModal,
   InputField,
   MyModalRef,
+  OnConfirmProps,
   SelectField,
   userSchema,
 } from "@/app/shared";
@@ -17,39 +18,55 @@ import { FormProvider, useForm } from "react-hook-form";
 import { UserAddOutlined } from "@ant-design/icons";
 import { useUserOptions } from "@/app/shared/lib/utilities/hooks";
 import { useQueryClient } from "@tanstack/react-query";
+import { useGlobalNotification } from "@/app/providers";
 
 export interface AddUserProps {
   modalRef?: Ref<MyModalRef>;
 }
 
 export function AddUser({ modalRef }: AddUserProps) {
+  //Hooks
   const queryClient = useQueryClient();
-  const queryKey = useGetUsersQuery.getKey();
+  const { openNotification } = useGlobalNotification();
   const { roles, countries, statuses } = useUserOptions();
-  const { mutateAsync, isPending } = useCreateUserMutation();
 
+  //Form Hooks
   const methods = useForm<CreateUserMutationVariables>({
     resolver: yupResolver(userSchema),
     mode: "all",
   });
+  const { trigger, reset, getValues } = methods;
 
-  const { handleSubmit, trigger, reset } = methods;
-
-  const onSubmit = async (data: CreateUserMutationVariables) => {
-    const isValid = await trigger();
-    if (!isValid) return false;
-    try {
-      const response = await mutateAsync(data);
-      await queryClient.invalidateQueries({
-        queryKey,
+  //Mutation
+  const { mutateAsync: createNewUser, isPending } = useCreateUserMutation({
+    onSuccess: () => {
+      openNotification({
+        type: "success",
+        description: "User has been added successfully!",
+      });
+      reset();
+      queryClient.invalidateQueries({
+        queryKey: useGetUsersQuery.getKey(),
         exact: false,
       });
-      console.log(response);
+    },
+    onError: (error: Error) => {
+      openNotification({
+        type: "error",
+        description: error?.message ?? "Failed to create user",
+      });
+    },
+  });
 
-      reset();
-      return true;
+  const handleAddNewUser = async ({ onClose }: OnConfirmProps) => {
+    const isValid = await trigger();
+    if (!isValid) return;
+    try {
+      const values = getValues();
+      await createNewUser(values);
+      onClose?.();
     } catch (error) {
-      console.log(error);
+      throw error;
     }
   };
 
@@ -61,20 +78,16 @@ export function AddUser({ modalRef }: AddUserProps) {
     <FOModal
       okButtonProps={{
         icon: <UserAddOutlined />,
-        loading: isPending,
       }}
       width={700}
       ref={modalRef}
       title="Add New User"
       okText="Yes, Add"
       maskClosable={false}
+      confirmLoading={isPending}
       onCancel={handleClose}
-      onConfirm={async () => {
-        const isValid = await trigger();
-        if (!isValid) return isValid;
-        await handleSubmit(onSubmit)();
-        return isValid;
-      }}
+      onConfirm={handleAddNewUser}
+      afterClose={reset}
     >
       <FormProvider {...methods}>
         <form

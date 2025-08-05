@@ -7,15 +7,31 @@ interface UserStore {
   users: User[];
   getUsers: () => User[];
   addUser: (user: User) => void;
+  removeUserById: (id: string) => void;
+  updateUserRole: (id: string, role: User["role"]) => void;
 }
 
 export const useUserStore = create<UserStore>()(
   persist(
     (set, get) => ({
-      users: generateMockUsers() ?? [],
+      users: [],
       getUsers: () => get().users,
       addUser: (user: User) => {
         set((state) => ({ ...state, users: [user, ...state.users] }));
+      },
+      removeUserById: (id: string) => {
+        set((state) => ({
+          ...state,
+          users: state.users.filter((user) => user.id !== id),
+        }));
+      },
+      updateUserRole: (id, role) => {
+        set((state) => ({
+          ...state,
+          users: state.users.map((user) =>
+            user.id === id ? { ...user, role } : user
+          ),
+        }));
       },
     }),
     {

@@ -9,13 +9,18 @@ import React, {
   JSX,
 } from "react";
 
+export interface OnConfirmProps<T=void> {
+  data?: T | undefined;
+  onClose?: () => void;
+}
+
 export interface MyModalRef<T = void> {
-  open: (data?: T) => void;
+  open: (data?: T | undefined) => void;
   close: () => void;
 }
 
 export interface CFModalProps<T = void> extends Omit<ModalProps, "children"> {
-  onConfirm?: () => Promise<boolean> | boolean;
+  onConfirm?: (props: OnConfirmProps<T>) => void;
   onCancel?: () => void;
   children?: React.ReactNode | ((data: T | undefined) => React.ReactNode);
 }
@@ -35,25 +40,24 @@ function FOModalInner<T>(
     close: () => setOpen(false),
   }));
 
+  const handleCancel = () => {
+    onCancel?.();
+    setOpen(false);
+    setPayload(undefined);
+  };
+
   const handleOk = async () => {
     if (onConfirm) {
       try {
-        const shouldClose = await onConfirm();
-        if (shouldClose) {
-          setOpen(false);
-          setPayload(undefined);
-        }
+        await onConfirm({
+          data: payload,
+          onClose: handleCancel,
+        });
         setPayload(undefined);
       } catch (error) {
         throw error;
       }
     }
-  };
-
-  const handleCancel = () => {
-    onCancel?.();
-    setOpen(false);
-    setPayload(undefined);
   };
 
   return (
