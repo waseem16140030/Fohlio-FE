@@ -1,4 +1,4 @@
-@import 'tailwindcss' prefix(tw);
+@import "tailwindcss" prefix(tw);
 
 :root {
   --background: #ffffff;
@@ -17,3 +17,5 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
 }
+
+

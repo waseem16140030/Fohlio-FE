@@ -28,6 +28,7 @@ export function DashboardSidebar() {
     scrollbarWidth: "thin",
     scrollbarGutter: "stable",
     backgroundColor: token.colorBgContainer,
+    borderColor: token.colorBorder,
   };
 
   const items: MenuProps["items"] = [
@@ -74,14 +75,20 @@ export function DashboardSidebar() {
       width={250}
       breakpoint="lg"
       style={siderStyle}
-      className="tw:overflow-auto tw:h-screen tw:!sticky tw:top-0 tw:bottom-0"
+      className="tw:overflow-auto tw:h-screen tw:!sticky tw:top-0 tw:bottom-0 tw:!border-r-1"
     >
-      <div className="tw:h-16 tw:flex tw:items-center tw:border-b tw:border-r tw:border-gray-100 tw:px-6 tw:mb-2 tw:lg:mb-4">
+      <div
+        className="tw:h-[72px] tw:flex tw:items-center tw:px-6 tw:mb-2 tw:lg:mb-4 tw:border-b-1"
+        style={{
+          borderColor: token.colorBorder,
+        }}
+      >
         <Link href={authKey.USERS_MANAGEMENT}>
           <Image src={appIcon} alt="Fohlio icon" height={64} width={120} />
         </Link>
       </div>
       <Menu
+        className="tw:!border-0"
         selectedKeys={[pathname]}
         onClick={handleMenuClick}
         mode="inline"

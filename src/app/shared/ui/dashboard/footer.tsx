@@ -9,10 +9,11 @@ export function DashboardFooter() {
   const footerStyle: React.CSSProperties = {
     backgroundColor: token.colorBgContainer,
     textAlign: "center",
+    borderColor: token.colorBorder,
   };
 
   return (
-    <Footer style={footerStyle}>
+    <Footer className="tw:!border-t-1" style={footerStyle}>
       <Text>Fohlio ©{new Date().getFullYear()} by Waseem</Text>
     </Footer>
   );
