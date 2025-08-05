@@ -71,6 +71,8 @@ export type Metadata = {
 export type Mutation = {
   __typename?: "Mutation";
   createUser: User;
+  deleteUser: Scalars["Boolean"]["output"];
+  editUserRole: User;
 };
 
 export type MutationCreateUserArgs = {
@@ -80,6 +82,15 @@ export type MutationCreateUserArgs = {
   phone: Scalars["String"]["input"];
   role: Scalars["String"]["input"];
   status: Scalars["String"]["input"];
+};
+
+export type MutationDeleteUserArgs = {
+  id: Scalars["ID"]["input"];
+};
+
+export type MutationEditUserRoleArgs = {
+  id: Scalars["ID"]["input"];
+  role: Scalars["String"]["input"];
 };
 
 export type PaginationInput = {
@@ -179,6 +190,25 @@ export type CreateUserMutation = {
     country?: string | null;
     registrationDate?: string | null;
   };
+};
+
+export type DeleteUserMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+}>;
+
+export type DeleteUserMutation = {
+  __typename?: "Mutation";
+  deleteUser: boolean;
+};
+
+export type EditUserRoleMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+  role: Scalars["String"]["input"];
+}>;
+
+export type EditUserRoleMutation = {
+  __typename?: "Mutation";
+  editUserRole: { __typename?: "User"; id: string; role?: string | null };
 };
 
 export const GetUsersDocument = `
@@ -314,5 +344,80 @@ export const useCreateUserMutation = <TError = unknown, TContext = unknown>(
 useCreateUserMutation.fetcher = (variables: CreateUserMutationVariables) =>
   fetcher<CreateUserMutation, CreateUserMutationVariables>(
     CreateUserDocument,
+    variables,
+  );
+
+export const DeleteUserDocument = `
+    mutation DeleteUser($id: ID!) {
+  deleteUser(id: $id)
+}
+    `;
+
+export const useDeleteUserMutation = <TError = unknown, TContext = unknown>(
+  options?: UseMutationOptions<
+    DeleteUserMutation,
+    TError,
+    DeleteUserMutationVariables,
+    TContext
+  >,
+) => {
+  return useMutation<
+    DeleteUserMutation,
+    TError,
+    DeleteUserMutationVariables,
+    TContext
+  >({
+    mutationKey: ["DeleteUser"],
+    mutationFn: (variables?: DeleteUserMutationVariables) =>
+      fetcher<DeleteUserMutation, DeleteUserMutationVariables>(
+        DeleteUserDocument,
+        variables,
+      )(),
+    ...options,
+  });
+};
+
+useDeleteUserMutation.fetcher = (variables: DeleteUserMutationVariables) =>
+  fetcher<DeleteUserMutation, DeleteUserMutationVariables>(
+    DeleteUserDocument,
+    variables,
+  );
+
+export const EditUserRoleDocument = `
+    mutation EditUserRole($id: ID!, $role: String!) {
+  editUserRole(id: $id, role: $role) {
+    id
+    role
+  }
+}
+    `;
+
+export const useEditUserRoleMutation = <TError = unknown, TContext = unknown>(
+  options?: UseMutationOptions<
+    EditUserRoleMutation,
+    TError,
+    EditUserRoleMutationVariables,
+    TContext
+  >,
+) => {
+  return useMutation<
+    EditUserRoleMutation,
+    TError,
+    EditUserRoleMutationVariables,
+    TContext
+  >({
+    mutationKey: ["EditUserRole"],
+    mutationFn: (variables?: EditUserRoleMutationVariables) =>
+      fetcher<EditUserRoleMutation, EditUserRoleMutationVariables>(
+        EditUserRoleDocument,
+        variables,
+      )(),
+    ...options,
+  });
+};
+
+useEditUserRoleMutation.fetcher = (variables: EditUserRoleMutationVariables) =>
+  fetcher<EditUserRoleMutation, EditUserRoleMutationVariables>(
+    EditUserRoleDocument,
     variables,
   );

@@ -22,7 +22,6 @@ query GetUsers(
   }
 }
 
-
 mutation CreateUser(
   $name: String!
   $email: String!
@@ -47,5 +46,16 @@ mutation CreateUser(
     phone
     country
     registrationDate
+  }
+}
+
+mutation DeleteUser($id: ID!) {
+  deleteUser(id: $id)
+}
+
+mutation EditUserRole($id: ID!, $role: String!) {
+  editUserRole(id: $id, role: $role) {
+    id
+    role
   }
 }

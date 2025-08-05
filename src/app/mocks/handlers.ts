@@ -17,7 +17,7 @@ export const handlers = [
         const { getUsers } = useUserStore.getState();
         const allUsers = getUsers();
         // console.log(allUsers, 'allUsers')
-        console.log(allUsers)
+        console.log(allUsers);
         await delay(300);
 
         const {
@@ -139,4 +139,86 @@ export const handlers = [
       }
     }
   ),
+
+  graphql.mutation("DeleteUser", async ({ variables }) => {
+    const { id } = variables;
+    if (!id) {
+      return HttpResponse.json(
+        {
+          errors: [
+            {
+              message: "User ID is required to delete a user.",
+            },
+          ],
+        },
+        { status: 400 }
+      );
+    }
+    try {
+      const { removeUserById } = useUserStore.getState();
+      await delay(300);
+      removeUserById(id);
+
+      return HttpResponse.json({
+        data: {
+          deleteUser: true,
+        },
+      });
+    } catch (error) {
+      return HttpResponse.json(
+        {
+          errors: [
+            {
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to delete user",
+            },
+          ],
+        },
+        { status: 400 }
+      );
+    }
+  }),
+  graphql.mutation("EditUserRole", async ({ variables }) => {
+    const { id, role } = variables;
+
+    if (!id || !role) {
+      return HttpResponse.json(
+        {
+          errors: [{ message: "Both id and role are required." }],
+        },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const { updateUserRole } = useUserStore.getState();
+      await delay(300);
+      updateUserRole(id, role);
+
+      return HttpResponse.json({
+        data: {
+          editUserRole: {
+            id,
+            role,
+          },
+        },
+      });
+    } catch (error) {
+      return HttpResponse.json(
+        {
+          errors: [
+            {
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to edit user role",
+            },
+          ],
+        },
+        { status: 400 }
+      );
+    }
+  }),
 ];

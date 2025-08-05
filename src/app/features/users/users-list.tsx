@@ -1,5 +1,4 @@
 "use client";
-
 import {
   formatDate,
   MyModalRef,
@@ -24,17 +23,24 @@ import {
   Typography,
 } from "antd";
 import { capitalize } from "lodash";
-import { DeleteTwoTone, EditTwoTone, EyeTwoTone, UserAddOutlined } from "@ant-design/icons";
-import React, { useRef } from "react";
+import { DeleteTwoTone, EditTwoTone, UserAddOutlined } from "@ant-design/icons";
+import React, { useRef, useState } from "react";
 import {
+  useChangeUserRole,
   usePaginatedQueryParams,
   useUserOptions,
 } from "@/app/shared/lib/utilities/hooks";
-import { AddUser } from "./add-user";
+import { AddUser, DeleteUserModal, DeleteUserProps } from ".";
 
 export function UsersList() {
+  const { Text } = Typography;
+  //State and Refs
+  const [UserId, setUserId] = useState<string | null>(null);
   const modalRef = useRef<MyModalRef>(null);
+  const deleteModalRef = useRef<MyModalRef<DeleteUserProps>>(null);
 
+  //Hooks
+  const { token } = theme.useToken();
   const {
     handleSearch,
     onTableChange,
@@ -47,43 +53,28 @@ export function UsersList() {
     sortOrder,
   } = usePaginatedQueryParams({ filterKeys: ["role"] });
 
-  const { roles } = useUserOptions();
-
-  const paginationParams = {
-    page: current,
-    pageSize,
-  };
-
-  const filterParams = {
-    email: search,
-    role: selectedFilters?.role,
-  };
-
-  const sortParams = {
-    order: sortOrder,
-    field: sortField,
-  };
-
   const queryKey = useGetUsersQuery.getKey({
-    pagination: paginationParams,
-    filters: filterParams,
-    sort: sortParams,
+    pagination: { page: current, pageSize },
+    filters: { role: selectedFilters.role, email: search },
+    sort: { field: sortField, order: sortOrder },
   });
   const queryFn = useGetUsersQuery.fetcher({
-    pagination: paginationParams,
-    filters: filterParams,
-    sort: sortParams,
+    pagination: { page: current, pageSize },
+    filters: { role: selectedFilters.role, email: search },
+    sort: { field: sortField, order: sortOrder },
   });
   const { data: userData, isLoading } = useQuery({
     queryKey,
     queryFn,
   });
+  const { roles } = useUserOptions();
+  const { handleUpdateRole, isPending } = useChangeUserRole();
+
+  //data
   const { users } = userData ?? {};
   const { data, metadata } = users ?? {};
 
-  const { Text } = Typography;
-  const { token } = theme.useToken();
-
+  //Columns
   const userColumns: TableProps<User>["columns"] = [
     {
       key: "name",
@@ -129,14 +120,38 @@ export function UsersList() {
       key: "role",
       dataIndex: "role",
       title: "Role",
+      width: 130,
       align: "center",
-      render: (_, { role }) => {
+      render: (_, { role, id }) => {
+        const isEditing = UserId === id;
         const color = userRoleColorMap[role!] ?? "default";
         const icon = React.createElement(userRoleIconMap[role ?? ""]);
-        return (
-          <Tag className="tw:!m-0" color={color} icon={icon}>
-            {capitalize(role ?? "")}
-          </Tag>
+        return isEditing ? (
+          <Select
+            variant="borderless"
+            showSearch
+            size="small"
+            loading={isPending}
+            onChange={(value) => {
+              handleUpdateRole({ id, role: value });
+              setUserId(null);
+            }}
+            className="tw:!w-24"
+            value={role}
+            options={roles}
+            onBlur={() => setUserId(null)}
+          />
+        ) : (
+          <Tooltip title="Click me to edit role">
+            <Tag
+              className="tw:!m-0 tw:cursor-pointer"
+              color={color}
+              icon={icon}
+              onClick={() => setUserId(id)}
+            >
+              {capitalize(role ?? "")}
+            </Tag>
+          </Tooltip>
         );
       },
     },
@@ -160,9 +175,14 @@ export function UsersList() {
       title: "Actions",
       align: "center",
       fixed: "right",
-      render: () => (
+      render: (_, { id }) => (
         <Space size={0}>
-          <Button type="text">
+          <Button
+            type="text"
+            onClick={() => {
+              deleteModalRef.current?.open({ userId: id });
+            }}
+          >
             <DeleteTwoTone twoToneColor={token.colorError} />
           </Button>
           <Button type="text">
@@ -172,10 +192,6 @@ export function UsersList() {
       ),
     },
   ];
-
-  const handleAddClick = () => {
-    modalRef.current?.open();
-  };
 
   return (
     <>
@@ -201,7 +217,9 @@ export function UsersList() {
               <Button
                 type="primary"
                 icon={<UserAddOutlined />}
-                onClick={handleAddClick}
+                onClick={() => {
+                  modalRef.current?.open();
+                }}
               >
                 Add User
               </Button>
@@ -223,6 +241,7 @@ export function UsersList() {
         </div>
       </Card>
       <AddUser modalRef={modalRef} />
+      <DeleteUserModal modalRef={deleteModalRef} />
     </>
   );
 }

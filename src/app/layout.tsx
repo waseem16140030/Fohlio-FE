@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
-import { ClientProvider, ThemeProvider } from "@/app/providers";
+import {
+  ClientProvider,
+  NotificationProvider,
+  ThemeProvider,
+} from "@/app/providers";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { DashboardLayout } from "@/app/shared";
 
@@ -19,8 +23,6 @@ export const metadata: Metadata = {
   description: "Brand Specification and Procurement Software",
 };
 
-
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -32,7 +34,9 @@ export default async function RootLayout({
         <AntdRegistry>
           <ThemeProvider>
             <ClientProvider>
-              <DashboardLayout>{children}</DashboardLayout>
+              <NotificationProvider>
+                <DashboardLayout>{children}</DashboardLayout>
+              </NotificationProvider>
             </ClientProvider>
           </ThemeProvider>
         </AntdRegistry>
