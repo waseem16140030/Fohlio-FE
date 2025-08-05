@@ -1,3 +1,3 @@
-export * from './init-mocks'
+export * from "./init-mocks";
+export * from "./utilities";
 export * from './theme'
-export * from './utilities'
