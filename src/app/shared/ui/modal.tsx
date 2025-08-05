@@ -7,9 +7,10 @@ import React, {
   useState,
   Ref,
   JSX,
+  useEffect,
 } from "react";
 
-export interface OnConfirmProps<T=void> {
+export interface OnConfirmProps<T = void> {
   data?: T | undefined;
   onClose?: () => void;
 }
@@ -23,14 +24,27 @@ export interface CFModalProps<T = void> extends Omit<ModalProps, "children"> {
   onConfirm?: (props: OnConfirmProps<T>) => void;
   onCancel?: () => void;
   children?: React.ReactNode | ((data: T | undefined) => React.ReactNode);
+  onDataReceived?: (data: T) => void;
 }
 
 function FOModalInner<T>(
-  { onConfirm, onCancel, children, ...restProps }: CFModalProps<T>,
+  {
+    onConfirm,
+    onCancel,
+    onDataReceived,
+    children,
+    ...restProps
+  }: CFModalProps<T>,
   ref: Ref<MyModalRef<T>>
 ) {
   const [isOpen, setOpen] = useState(false);
   const [payload, setPayload] = useState<T | undefined>();
+
+  useEffect(() => {
+    if (payload && onDataReceived) {
+      onDataReceived(payload);
+    }
+  }, [onDataReceived, payload]);
 
   useImperativeHandle(ref, () => ({
     open: (data?: T) => {

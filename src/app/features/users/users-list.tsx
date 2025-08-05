@@ -30,7 +30,7 @@ import {
   usePaginatedQueryParams,
   useUserOptions,
 } from "@/app/shared/lib/utilities/hooks";
-import { AddUser, DeleteUserModal, DeleteUserProps } from ".";
+import { AddUser, DeleteUserModal, DeleteUserProps, EditUserModal } from ".";
 
 export function UsersList() {
   const { Text } = Typography;
@@ -38,6 +38,7 @@ export function UsersList() {
   const [UserId, setUserId] = useState<string | null>(null);
   const modalRef = useRef<MyModalRef>(null);
   const deleteModalRef = useRef<MyModalRef<DeleteUserProps>>(null);
+  const editUserModalRef = useRef<MyModalRef<User>>(null);
 
   //Hooks
   const { token } = theme.useToken();
@@ -175,17 +176,17 @@ export function UsersList() {
       title: "Actions",
       align: "center",
       fixed: "right",
-      render: (_, { id }) => (
+      render: (_, user) => (
         <Space size={0}>
           <Button
             type="text"
             onClick={() => {
-              deleteModalRef.current?.open({ userId: id });
+              deleteModalRef.current?.open({ userId: user.id });
             }}
           >
             <DeleteTwoTone twoToneColor={token.colorError} />
           </Button>
-          <Button type="text">
+          <Button type="text" onClick={() => editUserModalRef.current?.open(user)}>
             <EditTwoTone twoToneColor={token.colorInfo} />
           </Button>
         </Space>
@@ -242,6 +243,7 @@ export function UsersList() {
       </Card>
       <AddUser modalRef={modalRef} />
       <DeleteUserModal modalRef={deleteModalRef} />
+      <EditUserModal modalRef={editUserModalRef} />
     </>
   );
 }

@@ -9,6 +9,7 @@ interface UserStore {
   addUser: (user: User) => void;
   removeUserById: (id: string) => void;
   updateUserRole: (id: string, role: User["role"]) => void;
+  updateUserById: (id: string, newData: Partial<User>) => void;
 }
 
 export const useUserStore = create<UserStore>()(
@@ -30,6 +31,13 @@ export const useUserStore = create<UserStore>()(
           ...state,
           users: state.users.map((user) =>
             user.id === id ? { ...user, role } : user
+          ),
+        }));
+      },
+      updateUserById: (id: string, newData: Partial<User>) => {
+        set((state) => ({
+          users: state.users.map((user) =>
+            user.id === id ? { ...user, ...newData } : user
           ),
         }));
       },
